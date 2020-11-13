@@ -1,0 +1,80 @@
+# Configuration file for the vscode-jupyterhub helm installation
+# See the README.md for information on how to apply it
+
+singleuser:
+  # Use the code-server image
+  image:
+    name: "codercom/code-server"
+    tag: "3.6.2"
+
+  # Mount the persistant volume claim
+  # directly inside the home folder of
+  # the coder user
+  storage:
+    homeMountPath: "/home/coder/work"
+
+proxy:
+  chp:
+    # Make sure the code server does never get to know about
+    # the user-specific prefixes and thinks "it runs by itself"
+    extraCommandLineFlags:
+    - "--no-include-prefix"
+  # secret token
+  secretToken:  # Fill with the result of `openssl rand -hex 32`
+
+hub:
+  # The code-server needs different arguments
+  # than the jupyter notebook image
+  extraConfig:
+    spawner.py: |
+      from kubespawner.spawner import KubeSpawner
+      from jupyterhub.spawner import _quote_safe
+
+      class VSCodeKubeSpawner(KubeSpawner):
+          def get_args(self):
+              """Custom args function for the coder"""
+
+              # Turn off authentication (happens via jupyterhub"
+              args = ["--auth", "none"]
+              # Turn off telemetry
+              args += ["--disable-telemetry"]
+
+              # set port and ip if given
+              ip = "0.0.0.0"
+              if self.ip:
+                  ip = _quote_safe(self.ip)
+
+              port = 8888
+              if self.port:
+                  port = self.port
+              elif self.server and self.server.port:
+                  self.log.warning(
+                      "Setting port from user.server is deprecated as of JupyterHub 0.7."
+                  )
+                  port = self.server.port
+
+              args += ["--bind-addr", f"{ip}:{port}"]
+
+              # set startup folder
+              if self.notebook_dir:
+                  notebook_dir = self.format_string(self.notebook_dir)
+                  args += ["--user-data-dir", _quote_safe(notebook_dir)]
+
+              if self.debug:
+                  args += ["-vvv"]
+
+              args.extend(self.args)
+              return args
+
+      # Use the configured spawner
+      c.JupyterHub.spawner_class = VSCodeKubeSpawner
+
+      # Do only start the already defined vs-code command
+      # not anything else
+      c.Spawner.cmd = ""
+
+      # Some settings specific to the vscode image
+      c.KubeSpawner.uid = 1000
+      c.KubeSpawner.gid = 0
+      c.KubeSpawner.working_dir = "/home/coder"
+
