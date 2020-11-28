@@ -4,8 +4,8 @@
     <img src="./assets/animation.gif">
 </a>
 
-This repository contains a guide on how to deploy a multi-tenant Visual Studio Code installation
-on your k8s cluster by stitching together two very nice projects:
+This repository contains a guide on how to deploy a multi-user full-blown IDE (Visual Studio Code) installation
+on your k8s cluster (e.g. in the public cloud) by glueing together two very nice projects:
 
 * [Zero to Jupyterhub](https://zero-to-jupyterhub.readthedocs.io/en/latest/index.html): a guide (and helm charts) for deploying jupyterhub to k8s. Jupyterhub is a multi-tenancy installation for managing [jupyter notebooks](https://jupyter.org/).
 * [code-server](https://github.com/cdr/code-server), an open-source ready-to-use VS Code installation (and docker image).
@@ -14,13 +14,14 @@ on your k8s cluster by stitching together two very nice projects:
 
 The Codehub brings you multiple nice features:
 * Give developers the chance to start working on a project without any overhead or installation: a browser and credentials is all they need
-* Scalable, low-maintenance, multi-tenancy installation of VS Code: every logged-in user gets its own running VS Code accessible via the browser.
-  Optionally, you can add persistent storage, extensions, personalization...
+* Scalable, low-maintenance, multi-user installation of an IDE: every logged-in user gets its own running VS Code accessible via the browser.
+  Optionally, you can add persistent storage, extensions, personalization, different project spaces...
 * Use the huge ecosystem around jupyterhub for easily integrating and configuring authentication (LDAP, OAuth, active directory, simple, ...), HTTPS, resource management and storage, user customization and so much more
 
 ## Get started
 
-If you have k8s, helm and a persistent storage provider not already set up, follow one of these [guides](https://zero-to-jupyterhub.readthedocs.io/en/latest/kubernetes/index.html) from the Zero to Jupyterhub documentation.
+If you have k8s, helm and a persistent storage provider not already set up, follow one of these [guides](https://zero-to-jupyterhub.readthedocs.io/en/latest/kubernetes/index.html) from the Zero to Jupyterhub documentation, to create a k8s cluster on GCP, AWS, Azure or other cloud provider.
+Also make sure, to have [helm](https://helm.sh/) installed.
 
 In principle, we just follow the remaining installation [guide](https://zero-to-jupyterhub.readthedocs.io/en/latest/jupyterhub/installation.html) to also install jupyterhub on k8s, but we use the supplied custom values file to choose the VS Code image.
 
@@ -33,7 +34,7 @@ Now clone or download the [values.yaml](./values.yaml) file and replace the `pro
 
 After that, install the jupyterhub/codehub helm chart:
 
-    helm upgrade --cleanup-on-fail --install codehub jupyterhub/jupyterhub --version=0.10.2  --values values.yaml
+    helm upgrade --cleanup-on-fail --install codehub jupyterhub/jupyterhub --values values.yaml
 
 Wait for all pods to be running
 

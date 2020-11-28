@@ -11,7 +11,7 @@ singleuser:
   # directly inside the home folder of
   # the coder user
   storage:
-    homeMountPath: "/home/coder/work"
+    homeMountPath: "/home/coder"
 
 proxy:
   chp:
@@ -20,13 +20,13 @@ proxy:
     extraCommandLineFlags:
     - "--no-include-prefix"
   # secret token
-  secretToken:  # Fill with the result of `openssl rand -hex 32`
+  secretToken: # TODO: Fill with the result of `openssl rand -hex 32`
 
 hub:
   # The code-server needs different arguments
   # than the jupyter notebook image
   extraConfig:
-    spawner.py: |
+    code_spawner.py: |
       from kubespawner.spawner import KubeSpawner
       from jupyterhub.spawner import _quote_safe
 
@@ -34,7 +34,7 @@ hub:
           def get_args(self):
               """Custom args function for the coder"""
 
-              # Turn off authentication (happens via jupyterhub"
+              # Turn off authentication (happens via jupyterhub)
               args = ["--auth", "none"]
               # Turn off telemetry
               args += ["--disable-telemetry"]
@@ -69,12 +69,12 @@ hub:
       # Use the configured spawner
       c.JupyterHub.spawner_class = VSCodeKubeSpawner
 
-      # Do only start the already defined vs-code command
-      # not anything else
-      c.Spawner.cmd = ""
+    code_settings.py: |
+      # The working dir is by default set to
+      # /home/coder in the VSCode image
+      c.VSCodeKubeSpawner.working_dir = "/home/coder"
 
-      # Some settings specific to the vscode image
-      c.KubeSpawner.uid = 1000
-      c.KubeSpawner.gid = 0
-      c.KubeSpawner.working_dir = "/home/coder"
-
+      # By default, the cmd includes the call to "jupyterhub-singleserver"
+      # However, the docker image already comes with the correct
+      # VSCode command to call, so we just set it to an empty string here
+      c.VSCodeKubeSpawner.cmd = ""
